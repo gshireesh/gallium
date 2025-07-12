@@ -18,9 +18,7 @@ func Generate(templateName, projectName, baseTemplateDir string, vars map[string
 		return err
 	}
 
-	dotTemplateSrc := filepath.Join(src, ".template")
-
-	if err := runHook(dotTemplateSrc, "pre.sh", dst); err != nil {
+	if err := runHook(src, "pre.sh", dst); err != nil {
 		return err
 	}
 
