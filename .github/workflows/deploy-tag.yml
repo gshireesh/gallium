@@ -1,0 +1,36 @@
+name: Auto Deploy with Release Tag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: contains(github.event.head_commit.message, 'deploy-new:')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from commit
+        id: extract
+        run: |
+          version=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'deploy-new:\s*\K(v[0-9]+\.[0-9]+\.[0-9]+)')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.extract.outputs.version }}
+          git push origin ${{ steps.extract.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.extract.outputs.version }}
+          generate_release_notes: true
