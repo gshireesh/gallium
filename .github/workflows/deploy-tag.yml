@@ -37,6 +37,7 @@ jobs:
         run: exit 0
 
       - name: Determine next tag
+        condition: steps.check_release.outputs.is_release == 'true'
         id: newtag
         run: |
           latest=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
@@ -49,6 +50,7 @@ jobs:
           fi
 
       - name: Push new tag using PAT
+        condition: steps.check_release.outputs.is_release == 'true'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
@@ -57,6 +59,7 @@ jobs:
           git push origin ${{ steps.newtag.outputs.new_tag }}
 
       - name: Create GitHub Release
+        condition: steps.check_release.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.newtag.outputs.new_tag }}
