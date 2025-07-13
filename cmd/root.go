@@ -12,6 +12,10 @@ import (
 	"shireesh.com/gallium/internal/tui"
 )
 
+const (
+	TemplatePath = "~/gallium/templates"
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "gallium",
 	Short: "Scaffold new projects from templates with hooks",
@@ -37,7 +41,7 @@ func inputPrompt(label string) string {
 }
 
 func runGenerator() {
-	base := "templates"
+	base := TemplatePath
 	entries, _ := os.ReadDir(base)
 	var templates []string
 	for _, e := range entries {

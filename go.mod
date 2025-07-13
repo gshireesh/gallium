@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.9.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
