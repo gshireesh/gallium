@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"embed"
+	"io"
 
 	"shireesh.com/gallium/cmd"
 	"shireesh.com/gallium/internal/compressor"
@@ -19,15 +21,27 @@ func ZipExists(zipLoc string) error {
 }
 
 func main() {
-	// check if the template zip exists
-	err := ZipExists("artifacts/templates.zip")
+
+	f, err := templatesZip.Open("artifacts/templates.zip")
 	if err != nil {
-		panic("Template zip not found. Please run the build command to generate it.")
+		panic("Template zip not found")
 	}
-	// extract the templates zip to the ~/.gallium/templates directory
-	err = compressor.Unzip("artifacts/templates.zip", "~/gallium/templates")
+	defer f.Close()
+
+	b, err := io.ReadAll(f)
 	if err != nil {
-		panic("Failed to extract templates: " + err.Error())
+		panic(err)
+	}
+
+	// remove existing templates directory if it exists
+	err = compressor.RemoveDir("~/gallium/templates")
+	if err != nil {
+		panic(err)
+	}
+
+	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), "~/gallium/templates")
+	if err != nil {
+		panic(err)
 	}
 	cmd.Execute()
 }

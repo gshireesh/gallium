@@ -105,6 +105,54 @@ func Unzip(srcZip, destDir string) error {
 	return nil
 }
 
+// UnzipFromReader extracts a zip archive from an io.ReaderAt and size to a destination directory.
+// Use with embed.FS like:
+//
+//	f, _ := templatesZip.Open("artifacts/templates.zip")
+//	b, _ := io.ReadAll(f)
+//	err := UnzipFromReader(bytes.NewReader(b), int64(len(b)), "/target/dir")
+func UnzipFromReader(readerAt io.ReaderAt, size int64, destDir string) error {
+	r, err := zip.NewReader(readerAt, size)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range r.File {
+		fpath := filepath.Join(destDir, f.Name)
+
+		// Ensure parent directory exists
+		if f.FileInfo().IsDir() {
+			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
+				return err
+			}
+			continue
+		} else {
+			if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+				return err
+			}
+		}
+
+		// Extract file
+		inFile, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer inFile.Close()
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			inFile.Close()
+			return err
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, inFile); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func ZipExists(zipLoc string) error {
 	// Check if the zip file exists
 	if _, err := os.Stat(zipLoc); os.IsNotExist(err) {
@@ -124,6 +172,17 @@ func ZipExists(zipLoc string) error {
 	}
 	if header[0] != 'P' || header[1] != 'K' {
 		return os.ErrInvalid
+	}
+	return nil
+}
+
+func RemoveDir(path string) error {
+	// Remove the directory and all its contents
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil // Directory does not exist, nothing to remove
+	}
+	if err := os.RemoveAll(path); err != nil {
+		return err
 	}
 	return nil
 }
