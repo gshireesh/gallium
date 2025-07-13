@@ -101,7 +101,7 @@ func runHook(templatePath, scriptName, workDir string) error {
 		if err := makeScriptExecutable(script); err != nil {
 			return fmt.Errorf("failed to make script executable: %w", err)
 		}
-		cmd := exec.Command("bash", "-c", script)
+		cmd := exec.Command("sh", "-c", script)
 		cmd.Dir = workDir
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

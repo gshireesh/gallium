@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -54,10 +55,21 @@ func runGenerator() {
 		panic(err)
 	}
 
-	projectName := inputPrompt("Enter project name")
+	projectPath := inputPrompt("Enter project name")
+	projectName := filepath.Clean(projectPath)
+
+	if projectPath == "./" || projectPath == "." || projectPath == "" {
+		// set projectName to current directory name
+		currentDirPath, err := os.Getwd()
+		if err != nil {
+			panic(fmt.Errorf("failed to get current working directory: %w", err))
+		}
+		currentDir := filepath.Base(currentDirPath)
+		projectName = currentDir
+	}
 
 	vars := map[string]string{"ProjectName": projectName}
-	err = generator.Generate(tplName, projectName, base, vars)
+	err = generator.Generate(tplName, projectPath, base, vars)
 	if err != nil {
 		panic(err)
 	}

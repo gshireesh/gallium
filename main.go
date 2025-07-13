@@ -12,14 +12,6 @@ import (
 //go:embed artifacts/*
 var templatesZip embed.FS
 
-func ZipExists(zipLoc string) error {
-	_, err := templatesZip.ReadFile(zipLoc)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func main() {
 
 	f, err := templatesZip.Open("artifacts/templates.zip")
