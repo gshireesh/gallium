@@ -4,13 +4,26 @@ import (
 	"bytes"
 	"embed"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
-	"shireesh.com/gallium/cmd"
 	"shireesh.com/gallium/internal/compressor"
 )
 
 //go:embed artifacts/*
 var templatesZip embed.FS
+
+func expandPath(path string) (string, error) {
+	if strings.HasPrefix(path, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "~")), nil
+	}
+	return path, nil
+}
 
 func main() {
 
@@ -31,9 +44,13 @@ func main() {
 		panic(err)
 	}
 
-	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), "~/gallium/templates")
+	path, err := expandPath("~/gallium/templates")
 	if err != nil {
 		panic(err)
 	}
-	cmd.Execute()
+	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), path)
+	if err != nil {
+		panic(err)
+	}
+	//cmd.Execute()
 }
