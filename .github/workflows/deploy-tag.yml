@@ -1,4 +1,4 @@
-name: Auto Deploy with Release Tag
+name: Auto Tag and Release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  tag_and_release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,27 +15,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Fetch all tags
-        run: git fetch --tags
-
-      - name: Get latest tag and increment
-        id: newtag
-        run: |
-          latest_tag=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
-          if [[ -z "$latest_tag" ]]; then
-            new_tag="v0.0.1"
-          else
-            IFS='.' read -r major minor patch <<< "${latest_tag#v}"
-            patch=$((patch+1))
-            new_tag="v${major}.${minor}.${patch}"
-          fi
-          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
-
-      - name: Tag and push
+      - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Determine next tag
+        id: newtag
+        run: |
+          latest=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
+          if [ -z "$latest" ]; then
+            echo "new_tag=v0.0.1" >> $GITHUB_OUTPUT
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            patch=$((patch + 1))
+            echo "new_tag=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push new tag using PAT
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
           git tag ${{ steps.newtag.outputs.new_tag }}
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
           git push origin ${{ steps.newtag.outputs.new_tag }}
 
       - name: Create GitHub Release
