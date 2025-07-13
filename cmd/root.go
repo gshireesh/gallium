@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,6 +17,17 @@ import (
 const (
 	TemplatePath = "~/gallium/templates"
 )
+
+func expandPath(path string) (string, error) {
+	if strings.HasPrefix(path, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "~")), nil
+	}
+	return path, nil
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "gallium",
@@ -42,7 +54,10 @@ func inputPrompt(label string) string {
 }
 
 func runGenerator() {
-	base := TemplatePath
+	base, err := expandPath(TemplatePath)
+	if err != nil {
+		panic(fmt.Errorf("failed to expand template path: %w", err))
+	}
 	entries, _ := os.ReadDir(base)
 	var templates []string
 	for _, e := range entries {
