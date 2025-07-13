@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"shireesh.com/gallium/cmd"
 	"shireesh.com/gallium/internal/compressor"
 )
 
@@ -52,5 +53,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//cmd.Execute()
+	cmd.Execute()
 }
