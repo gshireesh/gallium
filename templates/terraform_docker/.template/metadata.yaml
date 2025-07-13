@@ -1,0 +1,10 @@
+name: go-basic
+description: A simple Go starter project
+version: 1.0.0
+
+data:
+  projectDescription: A simple Go starter project
+  projectVersion: 1.0.0
+  projectAuthor: Shireesh Kumar G
+  projectEmail: reachme@shireesh.com
+  projectLicense: Confidential
