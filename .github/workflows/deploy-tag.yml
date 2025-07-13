@@ -31,8 +31,9 @@ jobs:
           else
             echo "is_release=false" >> $GITHUB_OUTPUT
           fi
+
       - name: Exit if not a release commit
-        if: steps.check_release.outputs.is_release != 'true'
+        if: steps.check_release.outputs.is_release == 'false'
         run: exit 0
 
       - name: Determine next tag
