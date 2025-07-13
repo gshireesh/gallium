@@ -153,6 +153,18 @@ func UnzipFromReader(readerAt io.ReaderAt, size int64, destDir string) error {
 	return nil
 }
 
+func ensureFileDirExists(f string) error {
+	// Ensure the directory for the file exists
+	dir := filepath.Dir(f)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			return err
+		}
+	}
+	return nil
+
+}
+
 func ZipExists(zipLoc string) error {
 	// Check if the zip file exists
 	if _, err := os.Stat(zipLoc); os.IsNotExist(err) {

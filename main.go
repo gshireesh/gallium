@@ -26,6 +26,14 @@ func expandPath(path string) (string, error) {
 	return path, nil
 }
 
+func createTemporaryDir() (string, error) {
+	tempDir, err := os.MkdirTemp("", "gallium-templates")
+	if err != nil {
+		return "", err
+	}
+	return tempDir, nil
+}
+
 func main() {
 
 	f, err := templatesZip.Open("artifacts/templates.zip")
@@ -39,17 +47,13 @@ func main() {
 		panic(err)
 	}
 
-	// remove existing templates directory if it exists
-	err = compressor.RemoveDir("~/gallium/templates")
+	// Create a temporary directory to extract the templates
+	tempDir, err := createTemporaryDir()
 	if err != nil {
 		panic(err)
 	}
-
-	path, err := expandPath("~/gallium/templates")
-	if err != nil {
-		panic(err)
-	}
-	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), path)
+	defer os.RemoveAll(tempDir) // Clean up the temporary directory after use
+	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), tempDir)
 	if err != nil {
 		panic(err)
 	}

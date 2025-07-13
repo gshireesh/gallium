@@ -55,7 +55,14 @@ func Generate(templateName, projectName, baseTemplateDir string, vars map[string
 	}
 
 	err := filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if strings.Contains(path, ".template") || d.IsDir() {
+		if strings.Contains(path, ".template") {
+			return nil // skip .template directory
+		}
+		if d.IsDir() {
+			// create directory structure in destination
+			if err := os.MkdirAll(filepath.Join(dst, strings.TrimPrefix(path, src)), os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", path, err)
+			}
 			return nil
 		}
 		rel, _ := filepath.Rel(src, path)

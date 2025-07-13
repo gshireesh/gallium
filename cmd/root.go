@@ -6,16 +6,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"github.com/manifoldco/promptui"
-
 	"shireesh.com/gallium/internal/generator"
-	"shireesh.com/gallium/internal/tui"
 )
 
-const (
-	TemplatePath = "~/gallium/templates"
+const TemplatePath = "~/gallium/templates"
+
+var (
+	templateFlag    string
+	projectNameFlag string
 )
 
 func expandPath(path string) (string, error) {
@@ -38,12 +39,15 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	rootCmd.Flags().StringVarP(&templateFlag, "template", "t", "", "Template name")
+	rootCmd.Flags().StringVarP(&projectNameFlag, "name", "n", "", "Project name (directory to generate in)")
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 }
+
 func inputPrompt(label string) string {
 	prompt := promptui.Prompt{Label: label}
 	result, err := prompt.Run()
@@ -53,34 +57,53 @@ func inputPrompt(label string) string {
 	return result
 }
 
+func selectPrompt(label string, items []string) (string, error) {
+	prompt := promptui.Select{
+		Label: label,
+		Items: items,
+	}
+	_, result, err := prompt.Run()
+	return result, err
+}
+
 func runGenerator() {
 	base, err := expandPath(TemplatePath)
 	if err != nil {
 		panic(fmt.Errorf("failed to expand template path: %w", err))
 	}
-	entries, _ := os.ReadDir(base)
+
+	entries, err := os.ReadDir(base)
+	if err != nil {
+		panic(fmt.Errorf("failed to read template directory: %w", err))
+	}
 	var templates []string
 	for _, e := range entries {
 		if e.IsDir() {
 			templates = append(templates, e.Name())
 		}
 	}
-	tplName, err := tui.SelectTemplate(templates)
-	if err != nil {
-		panic(err)
+
+	tplName := templateFlag
+	if tplName == "" {
+		tplName, err = selectPrompt("Select a template", templates)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	projectPath := inputPrompt("Enter project name")
+	projectPath := projectNameFlag
+	if projectPath == "" {
+		projectPath = inputPrompt("Enter project name")
+	}
 	projectName := filepath.Clean(projectPath)
 
 	if projectPath == "./" || projectPath == "." || projectPath == "" {
-		// set projectName to current directory name
+		// Use current directory name
 		currentDirPath, err := os.Getwd()
 		if err != nil {
 			panic(fmt.Errorf("failed to get current working directory: %w", err))
 		}
-		currentDir := filepath.Base(currentDirPath)
-		projectName = currentDir
+		projectName = filepath.Base(currentDirPath)
 	}
 
 	vars := map[string]string{"ProjectName": projectName}

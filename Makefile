@@ -1,4 +1,5 @@
 zip_artifacts:
+	rm -rf artifacts/templates.zip
 	go run ./cmd/compress_templates/main.go
 
 run:
