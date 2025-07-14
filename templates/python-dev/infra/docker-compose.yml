@@ -1,0 +1,13 @@
+name: {{ .ProjectName }}
+services:
+  jumpbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - all
+      - jumpbox
+    volumes:
+      - ../local/.zsh_history:/home/jarvis/.zsh_history
+      -  ../:/home/jarvis/apps
+    command: sleep infinity
