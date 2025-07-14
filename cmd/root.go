@@ -12,9 +12,8 @@ import (
 	"shireesh.com/gallium/internal/generator"
 )
 
-const TemplatePath = "~/gallium/templates"
-
 var (
+	TemplatesPath   string
 	templateFlag    string
 	projectNameFlag string
 )
@@ -38,9 +37,10 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
+func Execute(templatesPath string) {
 	rootCmd.Flags().StringVarP(&templateFlag, "template", "t", "", "Template name")
 	rootCmd.Flags().StringVarP(&projectNameFlag, "name", "n", "", "Project name (directory to generate in)")
+	TemplatesPath = templatesPath
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -67,7 +67,7 @@ func selectPrompt(label string, items []string) (string, error) {
 }
 
 func runGenerator() {
-	base, err := expandPath(TemplatePath)
+	base, err := expandPath(TemplatesPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to expand template path: %w", err))
 	}
@@ -104,6 +104,17 @@ func runGenerator() {
 			panic(fmt.Errorf("failed to get current working directory: %w", err))
 		}
 		projectName = filepath.Base(currentDirPath)
+	} else {
+		// pick the last part of the path as project name
+		if filepath.IsAbs(projectPath) {
+			projectName = filepath.Base(projectPath)
+		} else {
+			projectName = filepath.Clean(projectPath)
+			if strings.HasSuffix(projectName, "/") {
+				projectName = strings.TrimSuffix(projectName, "/")
+			}
+			projectName = filepath.Base(projectName)
+		}
 	}
 
 	vars := map[string]string{"ProjectName": projectName}

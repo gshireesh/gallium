@@ -57,5 +57,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Execute()
+	cmd.Execute(tempDir)
 }
