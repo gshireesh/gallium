@@ -1,0 +1,18 @@
+name: go-basic
+description: A simple Go starter project
+version: 1.0.0
+
+appendFiles:
+  - infra/docker-compose.yml
+  - infra/Dockerfile
+  - infra/.dockerignore
+  - infra/.gitignore
+  - infra/.template/metadata.yaml
+
+data:
+  projectName: go-basic
+  projectDescription: A simple Go starter project
+  projectVersion: 1.0.0
+  projectAuthor: Shireesh Kumar G
+  projectEmail: reachme@shireesh.com
+  projectLicense: Confidential

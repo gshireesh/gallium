@@ -1,0 +1,50 @@
+name: {{ .ProjectName }}
+services:
+  jumpbox:
+    container_name: jumpbox
+    restart: unless-stopped
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    runtime: nvidia
+    profiles:
+      - all
+      - jumpbox
+    volumes:
+      - ../local/.zsh_history:/home/jarvis/.zsh_history
+      -  ../:/home/jarvis/apps
+      - huggingface:/home/jarvis/.config/huggingface
+      - uvcache:/home/jarvis/.cache/uv
+    command: >
+      bash -c "
+        echo 'Checking GPU availability...';
+        if ! nvidia-smi > /dev/null 2>&1; then
+          echo 'nvidia-smi failed. Restarting container...';
+          exit 1;
+        fi;
+        # sleep infinity
+        # # Ensure uv cache directory exists with correct permissions
+        sudo mkdir -p /home/jarvis/.cache/uv && sudo chown -R jarvis:jarvis /home/jarvis/.cache
+        sudo mkdir -p /home/jarvis/.config/huggingface && sudo chown -R jarvis:jarvis /home/jarvis/.config/huggingface
+        echo 'Starting app...';
+        uv run main.py
+      "
+    environment:
+      HF_HOME: /home/jarvis/.config/huggingface
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      FLASK_DEBUG: 1
+    ipc: "host"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack:
+        soft: 67108864
+        hard: 67108864
+volumes:
+  huggingface:
+  uvcache:
