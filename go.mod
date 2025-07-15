@@ -2,6 +2,8 @@ module shireesh.com/gallium
 
 go 1.23.0
 
+toolchain go1.24.2
+
 require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.9.1
