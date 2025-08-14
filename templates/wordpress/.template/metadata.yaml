@@ -1,0 +1,11 @@
+name: wordpress
+description: A WordPress application template docker
+version: 1.0.0
+
+data:
+  projectName: wordpress
+  projectDescription: A WordPress application template docker
+  projectVersion: 1.0.0
+  projectAuthor: Shireesh Kumar G
+  projectEmail: reachme@shireesh.com
+  projectLicense: Confidential

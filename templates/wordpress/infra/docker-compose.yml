@@ -1,0 +1,33 @@
+name: {{ .ProjectName }}
+services:
+  db:
+    image: mysql:8.0 # Or mariadb:latest
+    container_name: wordpress_db
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: wordpress_db
+      MYSQL_USER: wordpress_user
+      MYSQL_PASSWORD: wordpress_password
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_app
+    ports:
+      - "80:80" # Map host port 80 to container port 80
+    environment:
+      WORDPRESS_DB_HOST: db:3306 # Connect to the 'db' service on port 3306
+      WORDPRESS_DB_USER: wordpress_user
+      WORDPRESS_DB_PASSWORD: wordpress_password
+      WORDPRESS_DB_NAME: wordpress_db
+    volumes:
+      - wordpress_data:/var/www/html # Persistent volume for WordPress files
+    depends_on:
+      - db # Ensure the database starts before WordPress
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  wordpress_data:
