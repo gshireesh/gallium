@@ -1,0 +1,10 @@
+.idea
+*.iml
+local
+.terraform.lock.hcl
+_backend.tf
+_provider.tf
+.terraform
+env
+.envrc
+.DS_Store

@@ -1,0 +1,11 @@
+name: unnamed
+description: A project template for docker compose
+version: 1.0.0
+
+data:
+  projectName: unnamed
+  projectDescription: A project template for docker compose
+  projectVersion: 1.0.0
+  projectAuthor: Shireesh Kumar G
+  projectEmail: reachme@shireesh.com
+  projectLicense: Confidential
