@@ -1,30 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"embed"
+	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"shireesh.com/gallium/cmd"
-	"shireesh.com/gallium/internal/compressor"
 )
 
-//go:embed artifacts/*
-var templatesZip embed.FS
-
-func expandPath(path string) (string, error) {
-	if strings.HasPrefix(path, "~") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		return filepath.Join(home, strings.TrimPrefix(path, "~")), nil
-	}
-	return path, nil
-}
+//go:embed all:templates
+var embeddedTemplates embed.FS
 
 func createTemporaryDir() (string, error) {
 	tempDir, err := os.MkdirTemp("", "gallium-templates")
@@ -34,28 +22,81 @@ func createTemporaryDir() (string, error) {
 	return tempDir, nil
 }
 
-func main() {
+func copyTemplates(dst string) error {
+	return fs.WalkDir(embeddedTemplates, "templates", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if path == "templates" {
+			return nil
+		}
 
-	f, err := templatesZip.Open("artifacts/templates.zip")
-	if err != nil {
-		panic("Template zip not found")
-	}
-	defer f.Close()
+		relPath, err := filepath.Rel("templates", path)
+		if err != nil {
+			return err
+		}
 
-	b, err := io.ReadAll(f)
-	if err != nil {
-		panic(err)
-	}
+		targetPath := filepath.Join(dst, relPath)
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
 
-	// Create a temporary directory to extract the templates
+		if d.IsDir() {
+			return os.MkdirAll(targetPath, 0755)
+		}
+
+		if err := os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); err != nil {
+			return err
+		}
+
+		src, err := embeddedTemplates.Open(path)
+		if err != nil {
+			return err
+		}
+
+		fileMode := info.Mode().Perm()
+		if fileMode == 0 {
+			fileMode = 0644
+		}
+
+		out, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fileMode)
+		if err != nil {
+			src.Close()
+			return err
+		}
+
+		_, copyErr := io.Copy(out, src)
+		closeErr := out.Close()
+		srcErr := src.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+		return srcErr
+	})
+}
+
+func run() error {
 	tempDir, err := createTemporaryDir()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer os.RemoveAll(tempDir) // Clean up the temporary directory after use
-	err = compressor.UnzipFromReader(bytes.NewReader(b), int64(len(b)), tempDir)
-	if err != nil {
-		panic(err)
+	defer os.RemoveAll(tempDir)
+
+	if err := copyTemplates(tempDir); err != nil {
+		return fmt.Errorf("failed to prepare embedded templates: %w", err)
 	}
+
 	cmd.Execute(tempDir)
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "gallium: %v\n", err)
+		os.Exit(1)
+	}
 }

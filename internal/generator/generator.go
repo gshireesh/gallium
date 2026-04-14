@@ -31,7 +31,7 @@ func GetVarsFromMetadata(metadataPath string) (map[string]string, error) {
 
 func Generate(templateName, projectName, baseTemplateDir string, vars map[string]string) error {
 	src := filepath.Join(baseTemplateDir, templateName)
-	dst := filepath.Join(".", projectName)
+	dst := filepath.Clean(projectName)
 
 	if err := os.MkdirAll(dst, os.ModePerm); err != nil {
 		return err

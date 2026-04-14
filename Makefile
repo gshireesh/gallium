@@ -1,9 +1,10 @@
-zip_artifacts:
-	rm -rf artifacts/templates.zip
-	go run ./cmd/compress_templates/main.go
-
 run:
-	go run main.go
+	go run .
 
-build: zip_artifacts
-	go build -o .out/gallium main.go
+build:
+	go build -o .out/gallium .
+
+VERSION ?= dev
+
+release-assets:
+	./scripts/build-release-assets.sh $(VERSION)
