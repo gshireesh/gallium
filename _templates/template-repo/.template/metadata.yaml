@@ -1,0 +1,9 @@
+name: template-repo
+description: Scaffold a new gallium template repo (collection) with an example template
+version: 1.0.0
+
+# The example template's files must keep their {{ }} placeholders literal —
+# they are rendered later, when the user generates FROM the new repo.
+raw:
+  - "example-template/*"
+  - "example-template/.template/*"

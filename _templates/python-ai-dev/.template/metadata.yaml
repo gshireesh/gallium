@@ -1,5 +1,5 @@
 name: go-basic
-description: A simple Go starter project
+description: A Python AI development project with uv and docker compose infra
 version: 1.0.0
 
 appendFiles:

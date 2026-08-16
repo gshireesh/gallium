@@ -1,5 +1,5 @@
 name: go-basic
-description: A simple Go starter project
+description: Terraform-managed docker compose infrastructure
 version: 1.0.0
 
 data:

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -131,6 +130,9 @@ func updateBinary(out io.Writer) error {
 
 	tempFile, err := os.CreateTemp(filepath.Dir(currentExecutable), ".gallium-update-*")
 	if err != nil {
+		if os.IsPermission(err) {
+			return fmt.Errorf("no permission to write to %s; rerun with: sudo gallium update", filepath.Dir(currentExecutable))
+		}
 		return fmt.Errorf("failed to create temporary file in %s: %w", filepath.Dir(currentExecutable), err)
 	}
 
@@ -151,8 +153,8 @@ func updateBinary(out io.Writer) error {
 	}
 
 	if err := os.Rename(tempPath, currentExecutable); err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "permission") {
-			return fmt.Errorf("failed to replace %s: %w; rerun with permissions for that directory", currentExecutable, err)
+		if os.IsPermission(err) {
+			return fmt.Errorf("no permission to replace %s; rerun with: sudo gallium update", currentExecutable)
 		}
 		return fmt.Errorf("failed to replace %s: %w", currentExecutable, err)
 	}

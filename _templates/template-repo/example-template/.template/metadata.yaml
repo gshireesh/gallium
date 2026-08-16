@@ -1,0 +1,6 @@
+name: example-template
+description: Example template - rename this directory and make it your own
+version: 1.0.0
+
+data:
+  projectAuthor: Shireesh Kumar G
